@@ -18,7 +18,7 @@ export function ThemeSwitch() {
     const {resolvedTheme, setTheme} = useTheme();
 
     if (!isClient) {
-        return <div className="h-8 w-35" aria-hidden/>;
+        return <div className="h-8 w-[140px]" aria-hidden />;
     }
 
     const isDark = resolvedTheme === "dark";
