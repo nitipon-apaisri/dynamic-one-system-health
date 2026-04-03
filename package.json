@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "format": "prettier --write .",
     "lint": "eslint",
     "prepare": "husky install",
     "audit:osv": "./scripts/security-check.sh"
@@ -27,7 +28,12 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.2",
     "husky": "^8.0.0",
+    "lint-staged": "^16.4.0",
+    "prettier": "3.8.1",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "lint-staged": {
+    "**/*": "prettier --write --ignore-unknown"
   }
 }

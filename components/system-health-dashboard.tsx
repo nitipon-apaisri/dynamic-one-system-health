@@ -1,28 +1,28 @@
-import {Card, Chip, cn, ProgressBar} from "@heroui/react";
+import { Card, Chip, cn, ProgressBar } from '@heroui/react';
 import {
   formatMegabytes,
   MEMORY_PROGRESS_MAX_MB,
   summarizeMemoryUsage,
   sortSnapshotsByTimestamp,
   type SystemHealthSnapshot,
-} from "@/lib/system-health";
+} from '@/lib/system-health';
 
 const glassCard =
-  "h-full min-h-0 border-0 shadow-none ring-0 backdrop-blur-md bg-white/45 dark:bg-black/35";
+  'h-full min-h-0 border-0 shadow-none ring-0 backdrop-blur-md bg-white/45 dark:bg-black/35';
 
 type Props = {
   data: SystemHealthSnapshot[];
 };
 
-function chipColorForStatus(status: string): "success" | "warning" | "danger" | "default" {
+function chipColorForStatus(status: string): 'success' | 'warning' | 'danger' | 'default' {
   const v = status.trim().toLowerCase();
-  if (v === "ok" || v === "healthy" || v === "up") return "success";
-  if (v === "warn" || v === "warning" || v === "degraded") return "warning";
-  if (v === "error" || v === "down" || v === "critical" || v === "failed") return "danger";
-  return "default";
+  if (v === 'ok' || v === 'healthy' || v === 'up') return 'success';
+  if (v === 'warn' || v === 'warning' || v === 'degraded') return 'warning';
+  if (v === 'error' || v === 'down' || v === 'critical' || v === 'failed') return 'danger';
+  return 'default';
 }
 
-export function SystemHealthDashboard({data}: Props) {
+export function SystemHealthDashboard({ data }: Props) {
   const sorted = sortSnapshotsByTimestamp(data);
   const memorySummary = summarizeMemoryUsage(data);
   const latest = sorted.length === 0 ? null : sorted[sorted.length - 1];
@@ -34,15 +34,13 @@ export function SystemHealthDashboard({data}: Props) {
   const statusBreakdown = [...statusCounts.entries()]
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .map(([status, count]) => `${status.toUpperCase()} ${count}`)
-    .join(" · ");
+    .join(' · ');
 
   const memoryValue =
-    memorySummary.latestMb === null
-      ? 0
-      : Math.min(memorySummary.latestMb, MEMORY_PROGRESS_MAX_MB);
+    memorySummary.latestMb === null ? 0 : Math.min(memorySummary.latestMb, MEMORY_PROGRESS_MAX_MB);
 
   const memoryAriaParts: string[] = [
-    `Latest ${memorySummary.latestRaw ?? "unknown"} (${MEMORY_PROGRESS_MAX_MB} MB reference cap)`,
+    `Latest ${memorySummary.latestRaw ?? 'unknown'} (${MEMORY_PROGRESS_MAX_MB} MB reference cap)`,
   ];
   if (memorySummary.avgMb !== null) {
     memoryAriaParts.push(`series average ${formatMegabytes(memorySummary.avgMb)}`);
@@ -54,8 +52,8 @@ export function SystemHealthDashboard({data}: Props) {
   return (
     <div
       className={cn(
-        "relative min-h-0 flex-1 overflow-hidden rounded-2xl",
-        "bg-slate-100 text-foreground dark:bg-slate-950",
+        'relative min-h-0 flex-1 overflow-hidden rounded-2xl',
+        'bg-slate-100 text-foreground dark:bg-slate-950'
       )}
     >
       <div
@@ -72,10 +70,7 @@ export function SystemHealthDashboard({data}: Props) {
       />
 
       <div className="relative flex min-h-[min(520px,calc(100dvh-5rem))] items-center justify-center p-6">
-        <Card
-          className={cn(glassCard, "flex w-full max-w-xl flex-col")}
-          variant="transparent"
-        >
+        <Card className={cn(glassCard, 'flex w-full max-w-xl flex-col')} variant="transparent">
           <Card.Header className="pb-1">
             <Card.Title className="text-sm font-semibold text-foreground">Memory</Card.Title>
           </Card.Header>
@@ -91,18 +86,18 @@ export function SystemHealthDashboard({data}: Props) {
                   </Chip>
                 </div>
                 <p className="text-xs leading-snug text-foreground/75">
-                  {statusBreakdown || "No status readings"}
+                  {statusBreakdown || 'No status readings'}
                 </p>
                 <p className="mt-1 text-xs leading-snug text-foreground/75">
-                  Latest memory:{" "}
+                  Latest memory:{' '}
                   <span className="font-medium text-foreground">
                     {memorySummary.latestMb !== null
                       ? formatMegabytes(memorySummary.latestMb)
-                      : (memorySummary.latestRaw ?? "—")}
+                      : (memorySummary.latestRaw ?? '—')}
                   </span>
                   {memorySummary.avgMb !== null && memorySummary.maxMb !== null
                     ? ` · Avg ${formatMegabytes(memorySummary.avgMb)} · Peak ${formatMegabytes(memorySummary.maxMb)}`
-                    : ""}
+                    : ''}
                 </p>
               </div>
             ) : null}
@@ -111,17 +106,17 @@ export function SystemHealthDashboard({data}: Props) {
             ) : (
               <>
                 <p className="text-xs leading-snug text-foreground/70">
-                  {memorySummary.totalCount} reading{memorySummary.totalCount === 1 ? "" : "s"}
+                  {memorySummary.totalCount} reading{memorySummary.totalCount === 1 ? '' : 's'}
                   {memorySummary.parsedCount !== memorySummary.totalCount
                     ? ` · ${memorySummary.parsedCount} with MB values`
-                    : ""}
+                    : ''}
                 </p>
                 <dl className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs tabular-nums">
                   <dt className="text-foreground/70">Latest</dt>
                   <dd className="text-right font-medium text-foreground">
                     {memorySummary.latestMb !== null
                       ? formatMegabytes(memorySummary.latestMb)
-                      : (memorySummary.latestRaw ?? "—")}
+                      : (memorySummary.latestRaw ?? '—')}
                   </dd>
                   {memorySummary.parsedCount > 0 &&
                   memorySummary.minMb !== null &&
@@ -144,19 +139,17 @@ export function SystemHealthDashboard({data}: Props) {
                   ) : null}
                 </dl>
                 <ProgressBar
-                  aria-label={memoryAriaParts.join(". ")}
+                  aria-label={memoryAriaParts.join('. ')}
                   className="w-full"
                   color="success"
                   maxValue={MEMORY_PROGRESS_MAX_MB}
                   minValue={0}
                   value={memoryValue}
-                  formatOptions={{style: "percent", maximumFractionDigits: 0}}
+                  formatOptions={{ style: 'percent', maximumFractionDigits: 0 }}
                 >
                   <ProgressBar.Output className="text-xs text-foreground/75" />
                   <ProgressBar.Track>
-                    <ProgressBar.Fill
-                      className="relative overflow-hidden after:absolute after:inset-0 after:bg-[repeating-linear-gradient(135deg,transparent,transparent_5px,rgba(255,255,255,0.14)_5px,rgba(255,255,255,0.14)_10px)] dark:after:bg-[repeating-linear-gradient(135deg,transparent,transparent_5px,rgba(255,255,255,0.1)_5px,rgba(255,255,255,0.1)_10px)]"
-                    />
+                    <ProgressBar.Fill className="relative overflow-hidden after:absolute after:inset-0 after:bg-[repeating-linear-gradient(135deg,transparent,transparent_5px,rgba(255,255,255,0.14)_5px,rgba(255,255,255,0.14)_10px)] dark:after:bg-[repeating-linear-gradient(135deg,transparent,transparent_5px,rgba(255,255,255,0.1)_5px,rgba(255,255,255,0.1)_10px)]" />
                   </ProgressBar.Track>
                 </ProgressBar>
               </>
