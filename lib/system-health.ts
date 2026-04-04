@@ -34,7 +34,7 @@ export const SAMPLE_SYSTEM_HEALTH_SERIES: SystemHealthSnapshot[] = [
   },
   {
     _id: '69cf834334b1f533a178b929',
-    status: 'warn',
+    status: 'ok',
     memory_usage: '288.00 MB',
     uptime: '0h 5m 40s',
     timestamp: '2026-04-03T16:04:10.000+07:00',

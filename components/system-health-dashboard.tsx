@@ -5,7 +5,6 @@ import { Card, Chip, cn } from '@heroui/react';
 import {
   formatMegabytes,
   getMonthActivityLevelGetter,
-  MEMORY_PROGRESS_MAX_MB,
   summarizeMemoryUsage,
   sortSnapshotsByTimestamp,
   type SystemHealthSnapshot,
@@ -63,29 +62,21 @@ export function SystemHealthDashboard({ data }: Props) {
     heatmapYear === undefined || heatmapMonth === undefined
       ? undefined
       : getMonthActivityLevelGetter(sorted, heatmapYear, heatmapMonth);
-  const statusBadge = latest !== null ? getStatusBadgeDisplay(latest.status) : null;
+  const statusBadge: {
+    label: string;
+    color: 'default' | 'accent' | 'success' | 'warning' | 'danger';
+  } | null = latest !== null ? getStatusBadgeDisplay(latest.status) : null;
   const statusCounts = new Map<string, number>();
   for (const snapshot of sorted) {
-    const key = snapshot.status.trim();
+    const key: string = snapshot.status.trim();
     statusCounts.set(key, (statusCounts.get(key) ?? 0) + 1);
   }
-  const statusBreakdown = [...statusCounts.entries()]
-    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-    .map(([status, count]) => `${status.toUpperCase()} ${count}`)
+  const statusBreakdown: string = [...statusCounts.entries()]
+    .sort(
+      (a: [string, number], b: [string, number]): number => b[1] - a[1] || a[0].localeCompare(b[0])
+    )
+    .map(([status, count]: [string, number]): string => `${status.toUpperCase()} ${count}`)
     .join(' · ');
-
-  const memoryValue =
-    memorySummary.latestMb === null ? 0 : Math.min(memorySummary.latestMb, MEMORY_PROGRESS_MAX_MB);
-
-  const memoryAriaParts: string[] = [
-    `Latest ${memorySummary.latestRaw ?? 'unknown'} (${MEMORY_PROGRESS_MAX_MB} MB reference cap)`,
-  ];
-  if (memorySummary.avgMb !== null) {
-    memoryAriaParts.push(`series average ${formatMegabytes(memorySummary.avgMb)}`);
-  }
-  if (memorySummary.maxMb !== null) {
-    memoryAriaParts.push(`series peak ${formatMegabytes(memorySummary.maxMb)}`);
-  }
 
   return (
     <div className={cn('relative min-h-0 flex-1 overflow-hidden rounded-2xl')}>
@@ -112,24 +103,8 @@ export function SystemHealthDashboard({ data }: Props) {
             <Card.Content className="flex flex-col gap-3 pt-0">
               {latest ? (
                 <div className="rounded-lg bg-black/5 p-3 dark:bg-white/10">
-                  <div className="mb-2 flex items-center justify-between gap-2">
-                    <p className="text-xs font-semibold tracking-wide text-foreground/80 uppercase">
-                      Status summary
-                    </p>
-                  </div>
                   <p className="text-xs leading-snug text-foreground/75">
                     {statusBreakdown || 'No status readings'}
-                  </p>
-                  <p className="mt-1 text-xs leading-snug text-foreground/75">
-                    Latest memory:{' '}
-                    <span className="font-medium text-foreground">
-                      {memorySummary.latestMb !== null
-                        ? formatMegabytes(memorySummary.latestMb)
-                        : (memorySummary.latestRaw ?? '—')}
-                    </span>
-                    {memorySummary.avgMb !== null && memorySummary.maxMb !== null
-                      ? ` · Avg ${formatMegabytes(memorySummary.avgMb)} · Peak ${formatMegabytes(memorySummary.maxMb)}`
-                      : ''}
                   </p>
                 </div>
               ) : null}
