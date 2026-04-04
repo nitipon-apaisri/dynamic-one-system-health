@@ -1,6 +1,7 @@
 'use client';
 
-import { Label, Switch } from '@heroui/react';
+import { Button } from '@heroui/react';
+import { Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useSyncExternalStore } from 'react';
 
@@ -17,19 +18,19 @@ export function ThemeSwitch() {
   const { resolvedTheme, setTheme } = useTheme();
 
   if (!isClient) {
-    return <div className="h-8 w-35" aria-hidden />;
+    return <div className="size-9" aria-hidden />;
   }
 
   const isDark = resolvedTheme === 'dark';
 
   return (
-    <Switch isSelected={isDark} onChange={(selected) => setTheme(selected ? 'dark' : 'light')}>
-      <Switch.Control>
-        <Switch.Thumb />
-      </Switch.Control>
-      <Switch.Content>
-        <Label className="text-sm text-muted">Dark mode</Label>
-      </Switch.Content>
-    </Switch>
+    <Button
+      isIconOnly
+      variant="ghost"
+      aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      onPress={() => setTheme(isDark ? 'light' : 'dark')}
+    >
+      {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
+    </Button>
   );
 }
