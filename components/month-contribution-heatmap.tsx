@@ -119,8 +119,13 @@ export function MonthContributionHeatmap({
       <p className="mb-2 text-xs font-medium text-muted">{title}</p>
       <table
         aria-label={`Activity heatmap for ${title}. Columns are Sunday through Saturday; each row is one week of the month.`}
-        className="border-separate border-spacing-1 lg:border-spacing-2"
+        className="w-full table-fixed border-separate border-spacing-1 lg:border-spacing-2"
       >
+        <colgroup>
+          {Array.from({ length: 7 }, (_, i) => (
+            <col key={i} className="w-[14.285714%]" />
+          ))}
+        </colgroup>
         <thead>
           <tr>
             {WEEKDAY_LABELS.map((label) => (

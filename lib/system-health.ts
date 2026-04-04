@@ -140,3 +140,50 @@ export function sortSnapshotsByTimestamp(
     return na - nb;
   });
 }
+
+/** Matches month heatmap intensity tiers (0 = none, 4 = busiest day in month). */
+export type ActivityHeatmapLevel = 0 | 1 | 2 | 3 | 4;
+
+/**
+ * Counts snapshots per local calendar day in the given month, then maps counts to levels 1–4
+ * relative to the busiest day (max count). Days with no readings are omitted from the map.
+ */
+export function buildMonthActivityLevels(
+  snapshots: SystemHealthSnapshot[],
+  year: number,
+  month: number
+): Map<number, ActivityHeatmapLevel> {
+  const counts = new Map<number, number>();
+  for (const s of snapshots) {
+    const d = new Date(s.timestamp);
+    if (Number.isNaN(d.getTime())) continue;
+    if (d.getFullYear() !== year || d.getMonth() !== month) continue;
+    const day = d.getDate();
+    counts.set(day, (counts.get(day) ?? 0) + 1);
+  }
+
+  let maxCount = 0;
+  for (const c of counts.values()) {
+    if (c > maxCount) maxCount = c;
+  }
+
+  const result = new Map<number, ActivityHeatmapLevel>();
+  if (maxCount === 0) return result;
+
+  for (const [day, count] of counts) {
+    const scaled = Math.ceil((count / maxCount) * 4);
+    const level = Math.min(4, Math.max(1, scaled)) as ActivityHeatmapLevel;
+    result.set(day, level);
+  }
+  return result;
+}
+
+/** `getLevel` callback for `MonthContributionHeatmap` from snapshot series. */
+export function getMonthActivityLevelGetter(
+  snapshots: SystemHealthSnapshot[],
+  year: number,
+  month: number
+): (dayOfMonth: number, date: Date) => ActivityHeatmapLevel {
+  const map = buildMonthActivityLevels(snapshots, year, month);
+  return (dayOfMonth) => map.get(dayOfMonth) ?? 0;
+}

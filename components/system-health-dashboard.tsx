@@ -1,12 +1,16 @@
+'use client';
+
 import { MonthContributionHeatmap } from '@/components/month-contribution-heatmap';
 import { Card, cn, ProgressBar } from '@heroui/react';
 import {
   formatMegabytes,
+  getMonthActivityLevelGetter,
   MEMORY_PROGRESS_MAX_MB,
   summarizeMemoryUsage,
   sortSnapshotsByTimestamp,
   type SystemHealthSnapshot,
 } from '@/lib/system-health';
+import { useMemo } from 'react';
 
 const glassCard =
   'h-full min-h-0 border-0 shadow-none ring-0 backdrop-blur-md bg-white/45 dark:bg-black/35';
@@ -19,6 +23,21 @@ export function SystemHealthDashboard({ data }: Props) {
   const sorted = sortSnapshotsByTimestamp(data);
   const memorySummary = summarizeMemoryUsage(data);
   const latest = sorted.length === 0 ? null : sorted[sorted.length - 1];
+
+  const heatmapAnchor = latest !== null ? new Date(latest.timestamp) : null;
+  const heatmapYear =
+    heatmapAnchor !== null && !Number.isNaN(heatmapAnchor.getTime())
+      ? heatmapAnchor.getFullYear()
+      : undefined;
+  const heatmapMonth =
+    heatmapAnchor !== null && !Number.isNaN(heatmapAnchor.getTime())
+      ? heatmapAnchor.getMonth()
+      : undefined;
+
+  const monthActivityGetLevel = useMemo(() => {
+    if (heatmapYear === undefined || heatmapMonth === undefined) return undefined;
+    return getMonthActivityLevelGetter(sorted, heatmapYear, heatmapMonth);
+  }, [sorted, heatmapYear, heatmapMonth]);
   const statusCounts = new Map<string, number>();
   for (const snapshot of sorted) {
     const key = snapshot.status.trim();
@@ -63,7 +82,7 @@ export function SystemHealthDashboard({ data }: Props) {
       {/*/>*/}
 
       <div className="relative flex min-h-[min(520px,calc(100dvh-5rem))] items-center justify-center p-6">
-        <div className="grid w-full max-w-6xl grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start">
+        <div className="grid w-full max-w-6xl grid-cols-1 gap-6 lg:grid-cols-6 lg:items-start">
           <Card
             className={cn(glassCard, 'flex min-w-0 w-full flex-col lg:col-span-4')}
             variant="transparent"
@@ -154,7 +173,7 @@ export function SystemHealthDashboard({ data }: Props) {
           </Card>
 
           <Card
-            className={cn(glassCard, 'flex min-w-0 w-full flex-col lg:col-span-8')}
+            className={cn(glassCard, 'flex min-w-0 w-full flex-col lg:col-span-2')}
             variant="transparent"
           >
             <Card.Header className="pb-1">
@@ -163,7 +182,17 @@ export function SystemHealthDashboard({ data }: Props) {
               </Card.Title>
             </Card.Header>
             <Card.Content className="pt-0">
-              <MonthContributionHeatmap />
+              <MonthContributionHeatmap
+                {...(heatmapYear !== undefined &&
+                heatmapMonth !== undefined &&
+                monthActivityGetLevel !== undefined
+                  ? {
+                      year: heatmapYear,
+                      month: heatmapMonth,
+                      getLevel: monthActivityGetLevel,
+                    }
+                  : {})}
+              />
             </Card.Content>
           </Card>
         </div>
