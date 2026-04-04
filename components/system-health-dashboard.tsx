@@ -1,4 +1,5 @@
-import { Card, Chip, cn, ProgressBar } from '@heroui/react';
+import { MonthContributionHeatmap } from '@/components/month-contribution-heatmap';
+import { Card, cn, ProgressBar } from '@heroui/react';
 import {
   formatMegabytes,
   MEMORY_PROGRESS_MAX_MB,
@@ -62,89 +63,110 @@ export function SystemHealthDashboard({ data }: Props) {
       {/*/>*/}
 
       <div className="relative flex min-h-[min(520px,calc(100dvh-5rem))] items-center justify-center p-6">
-        <Card className={cn(glassCard, 'flex w-full max-w-xl flex-col')} variant="transparent">
-          <Card.Header className="pb-1">
-            <Card.Title className="text-sm font-semibold text-foreground">Server Status</Card.Title>
-          </Card.Header>
-          <Card.Content className="flex flex-col gap-3 pt-0">
-            {latest ? (
-              <div className="rounded-lg bg-black/5 p-3 dark:bg-white/10">
-                <div className="mb-2 flex items-center justify-between gap-2">
-                  <p className="text-xs font-semibold tracking-wide text-foreground/80 uppercase">
-                    Status summary
+        <div className="flex w-full max-w-4xl flex-col items-stretch justify-center gap-6 lg:flex-row lg:items-start">
+          <Card
+            className={cn(glassCard, 'flex w-full flex-1 flex-col lg:max-w-xl')}
+            variant="transparent"
+          >
+            <Card.Header className="pb-1">
+              <Card.Title className="text-sm font-semibold text-foreground">
+                Server Status
+              </Card.Title>
+            </Card.Header>
+            <Card.Content className="flex flex-col gap-3 pt-0">
+              {latest ? (
+                <div className="rounded-lg bg-black/5 p-3 dark:bg-white/10">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <p className="text-xs font-semibold tracking-wide text-foreground/80 uppercase">
+                      Status summary
+                    </p>
+                  </div>
+                  <p className="text-xs leading-snug text-foreground/75">
+                    {statusBreakdown || 'No status readings'}
+                  </p>
+                  <p className="mt-1 text-xs leading-snug text-foreground/75">
+                    Latest memory:{' '}
+                    <span className="font-medium text-foreground">
+                      {memorySummary.latestMb !== null
+                        ? formatMegabytes(memorySummary.latestMb)
+                        : (memorySummary.latestRaw ?? '—')}
+                    </span>
+                    {memorySummary.avgMb !== null && memorySummary.maxMb !== null
+                      ? ` · Avg ${formatMegabytes(memorySummary.avgMb)} · Peak ${formatMegabytes(memorySummary.maxMb)}`
+                      : ''}
                   </p>
                 </div>
-                <p className="text-xs leading-snug text-foreground/75">
-                  {statusBreakdown || 'No status readings'}
-                </p>
-                <p className="mt-1 text-xs leading-snug text-foreground/75">
-                  Latest memory:{' '}
-                  <span className="font-medium text-foreground">
-                    {memorySummary.latestMb !== null
-                      ? formatMegabytes(memorySummary.latestMb)
-                      : (memorySummary.latestRaw ?? '—')}
-                  </span>
-                  {memorySummary.avgMb !== null && memorySummary.maxMb !== null
-                    ? ` · Avg ${formatMegabytes(memorySummary.avgMb)} · Peak ${formatMegabytes(memorySummary.maxMb)}`
-                    : ''}
-                </p>
-              </div>
-            ) : null}
-            {memorySummary.totalCount === 0 ? (
-              <p className="text-xs text-muted">—</p>
-            ) : (
-              <>
-                <p className="text-xs leading-snug text-foreground/70">
-                  {memorySummary.totalCount} reading{memorySummary.totalCount === 1 ? '' : 's'}
-                  {memorySummary.parsedCount !== memorySummary.totalCount
-                    ? ` · ${memorySummary.parsedCount} with MB values`
-                    : ''}
-                </p>
-                <dl className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs tabular-nums">
-                  <dt className="text-foreground/70">Latest</dt>
-                  <dd className="text-right font-medium text-foreground">
-                    {memorySummary.latestMb !== null
-                      ? formatMegabytes(memorySummary.latestMb)
-                      : (memorySummary.latestRaw ?? '—')}
-                  </dd>
-                  {memorySummary.parsedCount > 0 &&
-                  memorySummary.minMb !== null &&
-                  memorySummary.maxMb !== null &&
-                  memorySummary.avgMb !== null ? (
-                    <>
-                      <dt className="text-foreground/70">Min</dt>
-                      <dd className="text-right font-medium text-foreground">
-                        {formatMegabytes(memorySummary.minMb)}
-                      </dd>
-                      <dt className="text-foreground/70">Max</dt>
-                      <dd className="text-right font-medium text-foreground">
-                        {formatMegabytes(memorySummary.maxMb)}
-                      </dd>
-                      <dt className="text-foreground/70">Avg</dt>
-                      <dd className="text-right font-medium text-foreground">
-                        {formatMegabytes(memorySummary.avgMb)}
-                      </dd>
-                    </>
-                  ) : null}
-                </dl>
-                <ProgressBar
-                  aria-label={memoryAriaParts.join('. ')}
-                  className="w-full"
-                  color="success"
-                  maxValue={MEMORY_PROGRESS_MAX_MB}
-                  minValue={0}
-                  value={memoryValue}
-                  formatOptions={{ style: 'percent', maximumFractionDigits: 0 }}
-                >
-                  <ProgressBar.Output className="text-xs text-foreground/75" />
-                  <ProgressBar.Track>
-                    <ProgressBar.Fill className="relative overflow-hidden after:absolute after:inset-0 after:bg-[repeating-linear-gradient(135deg,transparent,transparent_5px,rgba(255,255,255,0.14)_5px,rgba(255,255,255,0.14)_10px)] dark:after:bg-[repeating-linear-gradient(135deg,transparent,transparent_5px,rgba(255,255,255,0.1)_5px,rgba(255,255,255,0.1)_10px)]" />
-                  </ProgressBar.Track>
-                </ProgressBar>
-              </>
-            )}
-          </Card.Content>
-        </Card>
+              ) : null}
+              {memorySummary.totalCount === 0 ? (
+                <p className="text-xs text-muted">—</p>
+              ) : (
+                <>
+                  <p className="text-xs leading-snug text-foreground/70">
+                    {memorySummary.totalCount} reading{memorySummary.totalCount === 1 ? '' : 's'}
+                    {memorySummary.parsedCount !== memorySummary.totalCount
+                      ? ` · ${memorySummary.parsedCount} with MB values`
+                      : ''}
+                  </p>
+                  <dl className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs tabular-nums">
+                    <dt className="text-foreground/70">Latest</dt>
+                    <dd className="text-right font-medium text-foreground">
+                      {memorySummary.latestMb !== null
+                        ? formatMegabytes(memorySummary.latestMb)
+                        : (memorySummary.latestRaw ?? '—')}
+                    </dd>
+                    {memorySummary.parsedCount > 0 &&
+                    memorySummary.minMb !== null &&
+                    memorySummary.maxMb !== null &&
+                    memorySummary.avgMb !== null ? (
+                      <>
+                        <dt className="text-foreground/70">Min</dt>
+                        <dd className="text-right font-medium text-foreground">
+                          {formatMegabytes(memorySummary.minMb)}
+                        </dd>
+                        <dt className="text-foreground/70">Max</dt>
+                        <dd className="text-right font-medium text-foreground">
+                          {formatMegabytes(memorySummary.maxMb)}
+                        </dd>
+                        <dt className="text-foreground/70">Avg</dt>
+                        <dd className="text-right font-medium text-foreground">
+                          {formatMegabytes(memorySummary.avgMb)}
+                        </dd>
+                      </>
+                    ) : null}
+                  </dl>
+                  <ProgressBar
+                    aria-label={memoryAriaParts.join('. ')}
+                    className="w-full"
+                    color="success"
+                    maxValue={MEMORY_PROGRESS_MAX_MB}
+                    minValue={0}
+                    value={memoryValue}
+                    formatOptions={{ style: 'percent', maximumFractionDigits: 0 }}
+                  >
+                    <ProgressBar.Output className="text-xs text-foreground/75" />
+                    <ProgressBar.Track>
+                      <ProgressBar.Fill className="relative overflow-hidden after:absolute after:inset-0 after:bg-[repeating-linear-gradient(135deg,transparent,transparent_5px,rgba(255,255,255,0.14)_5px,rgba(255,255,255,0.14)_10px)] dark:after:bg-[repeating-linear-gradient(135deg,transparent,transparent_5px,rgba(255,255,255,0.1)_5px,rgba(255,255,255,0.1)_10px)]" />
+                    </ProgressBar.Track>
+                  </ProgressBar>
+                </>
+              )}
+            </Card.Content>
+          </Card>
+
+          <Card
+            className={cn(glassCard, 'flex w-full flex-col lg:w-auto lg:shrink-0')}
+            variant="transparent"
+          >
+            <Card.Header className="pb-1">
+              <Card.Title className="text-sm font-semibold text-foreground">
+                Month activity
+              </Card.Title>
+            </Card.Header>
+            <Card.Content className="pt-0">
+              <MonthContributionHeatmap />
+            </Card.Content>
+          </Card>
+        </div>
       </div>
     </div>
   );
