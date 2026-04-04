@@ -39,6 +39,54 @@ function getStatusBadgeDisplay(status: string): {
   return { color: 'default', label };
 }
 
+type StatusChipColor = 'default' | 'accent' | 'success' | 'warning' | 'danger';
+
+/** Map to HeroUI theme tokens (see @heroui/styles variables). */
+function statusLeftBorderClass(color: StatusChipColor): string {
+  switch (color) {
+    case 'success':
+      return 'border-l-[color:var(--success)]';
+    case 'warning':
+      return 'border-l-[color:var(--warning)]';
+    case 'danger':
+      return 'border-l-[color:var(--danger)]';
+    case 'accent':
+      return 'border-l-[color:var(--accent)]';
+    default:
+      return 'border-l-[color:color-mix(in_oklch,var(--foreground)_22%,transparent)]';
+  }
+}
+
+function statusDotClass(color: StatusChipColor): string {
+  switch (color) {
+    case 'success':
+      return 'bg-[color:var(--success)]';
+    case 'warning':
+      return 'bg-[color:var(--warning)]';
+    case 'danger':
+      return 'bg-[color:var(--danger)]';
+    case 'accent':
+      return 'bg-[color:var(--accent)]';
+    default:
+      return 'bg-[color:color-mix(in_oklch,var(--foreground)_40%,transparent)]';
+  }
+}
+
+function breakdownDotClass(color: StatusChipColor): string {
+  switch (color) {
+    case 'success':
+      return 'bg-[color:var(--success)]';
+    case 'warning':
+      return 'bg-[color:var(--warning)]';
+    case 'danger':
+      return 'bg-[color:var(--danger)]';
+    case 'accent':
+      return 'bg-[color:var(--accent)]';
+    default:
+      return 'bg-[color:color-mix(in_oklch,var(--foreground)_35%,transparent)]';
+  }
+}
+
 type Props = {
   data: SystemHealthSnapshot[];
 };
@@ -62,21 +110,21 @@ export function SystemHealthDashboard({ data }: Props) {
     heatmapYear === undefined || heatmapMonth === undefined
       ? undefined
       : getMonthActivityLevelGetter(sorted, heatmapYear, heatmapMonth);
-  const statusBadge: {
-    label: string;
-    color: 'default' | 'accent' | 'success' | 'warning' | 'danger';
-  } | null = latest !== null ? getStatusBadgeDisplay(latest.status) : null;
+  const statusBadge: { label: string; color: StatusChipColor } | null =
+    latest !== null ? getStatusBadgeDisplay(latest.status) : null;
   const statusCounts = new Map<string, number>();
   for (const snapshot of sorted) {
     const key: string = snapshot.status.trim();
     statusCounts.set(key, (statusCounts.get(key) ?? 0) + 1);
   }
-  const statusBreakdown: string = [...statusCounts.entries()]
-    .sort(
-      (a: [string, number], b: [string, number]): number => b[1] - a[1] || a[0].localeCompare(b[0])
-    )
-    .map(([status, count]: [string, number]): string => `${status.toUpperCase()} ${count}`)
-    .join(' · ');
+  const statusBreakdownRows = [...statusCounts.entries()].sort(
+    (a, b) => b[1] - a[1] || a[0].localeCompare(b[0])
+  );
+
+  const latestReadingLabel =
+    heatmapAnchor !== null && !Number.isNaN(heatmapAnchor.getTime())
+      ? heatmapAnchor.toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })
+      : null;
 
   return (
     <div className={cn('relative min-h-0 flex-1 overflow-hidden rounded-2xl')}>
@@ -100,12 +148,61 @@ export function SystemHealthDashboard({ data }: Props) {
                 </Chip>
               )}
             </Card.Header>
-            <Card.Content className="flex flex-col gap-3 pt-0">
-              {latest ? (
-                <div className="rounded-lg bg-black/5 p-3 dark:bg-white/10">
-                  <p className="text-xs leading-snug text-foreground/75">
-                    {statusBreakdown || 'No status readings'}
-                  </p>
+            <Card.Content className="flex flex-col gap-4 pt-0">
+              {latest !== null && statusBadge !== null ? (
+                <div
+                  className={cn(
+                    'rounded-lg  bg-gray-100 px-3 py-3 dark:bg-white/10'
+                    // statusLeftBorderClass(statusBadge.color),
+                  )}
+                >
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-x-6">
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted">Last reading</p>
+                      <time
+                        className="mt-0.5 block text-xs font-medium tabular-nums text-foreground"
+                        dateTime={latest.timestamp}
+                      >
+                        {latestReadingLabel ?? '—'}
+                      </time>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted">Uptime</p>
+                      <p className="mt-0.5 text-xs font-medium tabular-nums text-foreground">
+                        {latest.uptime.trim().length > 0 ? latest.uptime.trim() : '—'}
+                      </p>
+                    </div>
+                  </div>
+                  <div
+                    className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 border-t border-separator pt-3"
+                    role="list"
+                    aria-label="Status distribution across snapshots"
+                  >
+                    {statusBreakdownRows.length === 0 ? (
+                      <span className="text-xs text-muted">No readings</span>
+                    ) : (
+                      statusBreakdownRows.map(([status, count]) => {
+                        const meta = getStatusBadgeDisplay(status);
+                        return (
+                          <span
+                            key={status || 'empty'}
+                            className="flex items-center gap-2 text-xs tabular-nums"
+                            role="listitem"
+                          >
+                            <span
+                              className={cn(
+                                'size-1 shrink-0 rounded-full',
+                                breakdownDotClass(meta.color)
+                              )}
+                              aria-hidden
+                            />
+                            <span className="text-foreground/70">{meta.label}</span>
+                            <span className="font-medium text-foreground">{count}</span>
+                          </span>
+                        );
+                      })
+                    )}
+                  </div>
                 </div>
               ) : null}
               {memorySummary.totalCount === 0 ? (
