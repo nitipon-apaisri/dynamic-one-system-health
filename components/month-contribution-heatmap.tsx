@@ -116,7 +116,7 @@ export function MonthContributionHeatmap({
 
   return (
     <div className={cn(className)}>
-      <p className="mb-2 text-xs font-medium text-muted">{title}</p>
+      {/*<p className="mb-2 text-xs font-medium text-muted">{title}</p>*/}
       <table
         aria-label={`Activity heatmap for ${title}. Columns are Sunday through Saturday; each row is one week of the month.`}
         className="w-full table-fixed border-separate border-spacing-1 lg:border-spacing-2"

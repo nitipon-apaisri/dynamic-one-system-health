@@ -82,7 +82,7 @@ export function SystemHealthDashboard({ data }: Props) {
       {/*/>*/}
 
       <div className="relative flex min-h-[min(520px,calc(100dvh-5rem))] items-center justify-center p-6">
-        <div className="grid w-full max-w-6xl grid-cols-1 gap-6 lg:grid-cols-6 lg:items-start">
+        <div className="grid w-full max-w-4xl grid-cols-1 gap-6 lg:grid-cols-6 lg:items-start">
           <Card
             className={cn(glassCard, 'flex min-w-0 w-full flex-col lg:col-span-4')}
             variant="transparent"
@@ -120,12 +120,12 @@ export function SystemHealthDashboard({ data }: Props) {
                 <p className="text-xs text-muted">—</p>
               ) : (
                 <>
-                  <p className="text-xs leading-snug text-foreground/70">
-                    {memorySummary.totalCount} reading{memorySummary.totalCount === 1 ? '' : 's'}
-                    {memorySummary.parsedCount !== memorySummary.totalCount
-                      ? ` · ${memorySummary.parsedCount} with MB values`
-                      : ''}
-                  </p>
+                  {/*<p className="text-xs leading-snug text-foreground/70">*/}
+                  {/*  {memorySummary.totalCount} reading{memorySummary.totalCount === 1 ? '' : 's'}*/}
+                  {/*  {memorySummary.parsedCount !== memorySummary.totalCount*/}
+                  {/*    ? ` · ${memorySummary.parsedCount} with MB values`*/}
+                  {/*    : ''}*/}
+                  {/*</p>*/}
                   <dl className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs tabular-nums">
                     <dt className="text-foreground/70">Latest</dt>
                     <dd className="text-right font-medium text-foreground">
@@ -178,7 +178,8 @@ export function SystemHealthDashboard({ data }: Props) {
           >
             <Card.Header className="pb-1">
               <Card.Title className="text-sm font-semibold text-foreground">
-                Month activity
+                Month activity -{' '}
+                {heatmapAnchor?.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
               </Card.Title>
             </Card.Header>
             <Card.Content className="pt-0">
