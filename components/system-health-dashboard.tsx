@@ -1,7 +1,7 @@
 'use client';
 
 import { MonthContributionHeatmap } from '@/components/month-contribution-heatmap';
-import { Card, cn, ProgressBar } from '@heroui/react';
+import { Card, Chip, cn } from '@heroui/react';
 import {
   formatMegabytes,
   getMonthActivityLevelGetter,
@@ -10,10 +10,35 @@ import {
   sortSnapshotsByTimestamp,
   type SystemHealthSnapshot,
 } from '@/lib/system-health';
-import { useMemo } from 'react';
 
 const glassCard =
   'h-full min-h-0 border-0 shadow-none ring-0 backdrop-blur-md bg-white/45 dark:bg-black/35';
+
+function getStatusBadgeDisplay(status: string): {
+  label: string;
+  color: 'default' | 'accent' | 'success' | 'warning' | 'danger';
+} {
+  const trimmed = status.trim();
+  const label = trimmed.length > 0 ? trimmed.toUpperCase() : 'UNKNOWN';
+  const key = trimmed.toLowerCase();
+  if (key === 'ok' || key === 'healthy' || key === 'up' || key === 'online') {
+    return { color: 'success', label };
+  }
+  if (key === 'warn' || key === 'warning' || key === 'degraded') {
+    return { color: 'warning', label };
+  }
+  if (
+    key === 'error' ||
+    key === 'down' ||
+    key === 'critical' ||
+    key === 'offline' ||
+    key === 'fail' ||
+    key === 'failed'
+  ) {
+    return { color: 'danger', label };
+  }
+  return { color: 'default', label };
+}
 
 type Props = {
   data: SystemHealthSnapshot[];
@@ -34,10 +59,11 @@ export function SystemHealthDashboard({ data }: Props) {
       ? heatmapAnchor.getMonth()
       : undefined;
 
-  const monthActivityGetLevel = useMemo(() => {
-    if (heatmapYear === undefined || heatmapMonth === undefined) return undefined;
-    return getMonthActivityLevelGetter(sorted, heatmapYear, heatmapMonth);
-  }, [sorted, heatmapYear, heatmapMonth]);
+  const monthActivityGetLevel =
+    heatmapYear === undefined || heatmapMonth === undefined
+      ? undefined
+      : getMonthActivityLevelGetter(sorted, heatmapYear, heatmapMonth);
+  const statusBadge = latest !== null ? getStatusBadgeDisplay(latest.status) : null;
   const statusCounts = new Map<string, number>();
   for (const snapshot of sorted) {
     const key = snapshot.status.trim();
@@ -62,35 +88,26 @@ export function SystemHealthDashboard({ data }: Props) {
   }
 
   return (
-    <div
-      className={cn(
-        'relative min-h-0 flex-1 overflow-hidden rounded-2xl'
-        // 'bg-slate-100 text-foreground dark:bg-slate-950'
-      )}
-    >
-      {/*<div*/}
-      {/*  aria-hidden*/}
-      {/*  className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_85%_55%_at_15%_-5%,rgba(99,102,241,0.28),transparent_55%)] dark:bg-[radial-gradient(ellipse_85%_55%_at_15%_-5%,rgba(99,102,241,0.38),transparent_55%)]"*/}
-      {/*/>*/}
-      {/*<div*/}
-      {/*  aria-hidden*/}
-      {/*  className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_95%_10%,rgba(100,116,139,0.35),transparent_50%)] dark:bg-[radial-gradient(ellipse_70%_50%_at_95%_10%,rgba(148,163,184,0.22),transparent_50%)]"*/}
-      {/*/>*/}
-      {/*<div*/}
-      {/*  aria-hidden*/}
-      {/*  className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_45%_at_50%_100%,rgba(79,70,229,0.12),transparent_45%)] dark:bg-[radial-gradient(ellipse_60%_45%_at_50%_100%,rgba(129,140,248,0.15),transparent_45%)]"*/}
-      {/*/>*/}
-
+    <div className={cn('relative min-h-0 flex-1 overflow-hidden rounded-2xl')}>
       <div className="relative flex min-h-[min(520px,calc(100dvh-5rem))] items-center justify-center p-6">
-        <div className="grid w-full max-w-4xl grid-cols-1 gap-6 lg:grid-cols-6 lg:items-start">
+        <div className="grid w-full max-w-3xl grid-cols-1 gap-6 lg:grid-cols-6 lg:items-start">
           <Card
             className={cn(glassCard, 'flex min-w-0 w-full flex-col lg:col-span-4')}
             variant="transparent"
           >
-            <Card.Header className="pb-1">
+            <Card.Header className="flex w-full min-w-0 flex-row items-center justify-between gap-2 pb-1">
               <Card.Title className="text-sm font-semibold text-foreground">
                 Server Status
               </Card.Title>
+              {statusBadge !== null ? (
+                <Chip color={statusBadge.color} size="sm" variant="soft">
+                  {statusBadge.label}
+                </Chip>
+              ) : (
+                <Chip color="default" size="sm" variant="soft">
+                  No data
+                </Chip>
+              )}
             </Card.Header>
             <Card.Content className="flex flex-col gap-3 pt-0">
               {latest ? (
@@ -120,12 +137,6 @@ export function SystemHealthDashboard({ data }: Props) {
                 <p className="text-xs text-muted">—</p>
               ) : (
                 <>
-                  {/*<p className="text-xs leading-snug text-foreground/70">*/}
-                  {/*  {memorySummary.totalCount} reading{memorySummary.totalCount === 1 ? '' : 's'}*/}
-                  {/*  {memorySummary.parsedCount !== memorySummary.totalCount*/}
-                  {/*    ? ` · ${memorySummary.parsedCount} with MB values`*/}
-                  {/*    : ''}*/}
-                  {/*</p>*/}
                   <dl className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs tabular-nums">
                     <dt className="text-foreground/70">Latest</dt>
                     <dd className="text-right font-medium text-foreground">
@@ -153,20 +164,6 @@ export function SystemHealthDashboard({ data }: Props) {
                       </>
                     ) : null}
                   </dl>
-                  <ProgressBar
-                    aria-label={memoryAriaParts.join('. ')}
-                    className="w-full"
-                    color="success"
-                    maxValue={MEMORY_PROGRESS_MAX_MB}
-                    minValue={0}
-                    value={memoryValue}
-                    formatOptions={{ style: 'percent', maximumFractionDigits: 0 }}
-                  >
-                    <ProgressBar.Output className="text-xs text-foreground/75" />
-                    <ProgressBar.Track>
-                      <ProgressBar.Fill className="relative overflow-hidden after:absolute after:inset-0 after:bg-[repeating-linear-gradient(135deg,transparent,transparent_5px,rgba(255,255,255,0.14)_5px,rgba(255,255,255,0.14)_10px)] dark:after:bg-[repeating-linear-gradient(135deg,transparent,transparent_5px,rgba(255,255,255,0.1)_5px,rgba(255,255,255,0.1)_10px)]" />
-                    </ProgressBar.Track>
-                  </ProgressBar>
                 </>
               )}
             </Card.Content>
