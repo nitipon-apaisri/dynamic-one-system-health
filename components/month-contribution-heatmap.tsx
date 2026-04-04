@@ -16,30 +16,33 @@ export type MonthContributionHeatmapProps = {
   getLevel?: (dayOfMonth: number, date: Date) => HeatmapLevel;
 };
 
-/** Rows follow Sunday–Saturday (the same convention as GitHub’s graph). */
+/**
+ * Calendar layout: columns Sun–Sat (header row), each body row is one week.
+ * Top-left cell is the Sunday of the week that contains the 1st (may be empty padding).
+ */
 function buildMonthGrid(year: number, month: number) {
   const first = new Date(year, month, 1);
   const last = new Date(year, month + 1, 0);
   const startWeekday = first.getDay();
   const daysInMonth = last.getDate();
-  const numCols = Math.ceil((startWeekday + daysInMonth) / 7);
+  const numWeekRows = Math.ceil((startWeekday + daysInMonth) / 7);
 
-  const rows: Array<Array<{ date: Date | null; dayOfMonth: number | null }>> = [];
-  for (let r = 0; r < 7; r++) {
-    const row: Array<{ date: Date | null; dayOfMonth: number | null }> = [];
-    for (let c = 0; c < numCols; c++) {
-      const offset = c * 7 + r;
+  const weeks: Array<Array<{ date: Date | null; dayOfMonth: number | null }>> = [];
+  for (let w = 0; w < numWeekRows; w++) {
+    const week: Array<{ date: Date | null; dayOfMonth: number | null }> = [];
+    for (let d = 0; d < 7; d++) {
+      const offset = w * 7 + d;
       if (offset < startWeekday || offset >= startWeekday + daysInMonth) {
-        row.push({ date: null, dayOfMonth: null });
+        week.push({ date: null, dayOfMonth: null });
       } else {
         const day = offset - startWeekday + 1;
-        row.push({ date: new Date(year, month, day), dayOfMonth: day });
+        week.push({ date: new Date(year, month, day), dayOfMonth: day });
       }
     }
-    rows.push(row);
+    weeks.push(week);
   }
 
-  return { rows, numCols, year, month, daysInMonth };
+  return { weeks, year, month };
 }
 
 const WEEKDAY_LABELS = Array.from({ length: 7 }, (_, i) =>
@@ -99,7 +102,7 @@ export function MonthContributionHeatmap({
     return (
       <div
         className={cn(
-          'min-h-22 min-w-32 rounded-md bg-[color-mix(in_oklch,var(--foreground)_6%,var(--background))]',
+          'min-h-22 min-w-40 rounded-md bg-[color-mix(in_oklch,var(--foreground)_6%,var(--background))]',
           className
         )}
         aria-busy="true"
@@ -115,23 +118,30 @@ export function MonthContributionHeatmap({
     <div className={cn(className)}>
       <p className="mb-2 text-xs font-medium text-muted">{title}</p>
       <table
-        aria-label={`Activity heatmap for ${title}. Rows are Sunday through Saturday; columns are weeks of the month.`}
-        className="border-separate border-spacing-1"
+        aria-label={`Activity heatmap for ${title}. Columns are Sunday through Saturday; each row is one week of the month.`}
+        className="border-separate border-spacing-1 lg:border-spacing-2"
       >
-        <tbody>
-          {grid.rows.map((row, r) => (
-            <tr key={r}>
+        <thead>
+          <tr>
+            {WEEKDAY_LABELS.map((label) => (
               <th
-                scope="row"
-                className="pr-2 text-left text-[10px] font-normal text-muted tabular-nums"
+                key={label}
+                scope="col"
+                className="pb-1 text-center text-[10px] font-normal text-muted tabular-nums"
               >
-                {WEEKDAY_LABELS[r]}
+                {label}
               </th>
-              {row.map((cell, c) => {
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {grid.weeks.map((week, w) => (
+            <tr key={w}>
+              {week.map((cell, d) => {
                 if (cell.date === null || cell.dayOfMonth === null) {
                   return (
-                    <td key={c} className="p-0" aria-hidden="true">
-                      <span className="inline-block size-3 rounded-sm" />
+                    <td key={d} className="p-0 text-center" aria-hidden="true">
+                      <span className="inline-block size-3 rounded-sm lg:size-4" />
                     </td>
                   );
                 }
@@ -139,9 +149,9 @@ export function MonthContributionHeatmap({
                 const iso = localIsoDate(cell.date);
                 const label = `${iso}, intensity ${level} of 4`;
                 return (
-                  <td key={c} className="p-0" aria-label={label} title={label}>
+                  <td key={d} className="p-0 text-center" aria-label={label} title={label}>
                     <span
-                      className="inline-block size-3 rounded-sm"
+                      className="inline-block size-3 rounded-sm lg:size-4"
                       style={{ backgroundColor: cellBackground(level) }}
                     />
                   </td>

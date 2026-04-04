@@ -63,9 +63,9 @@ export function SystemHealthDashboard({ data }: Props) {
       {/*/>*/}
 
       <div className="relative flex min-h-[min(520px,calc(100dvh-5rem))] items-center justify-center p-6">
-        <div className="flex w-full max-w-4xl flex-col items-stretch justify-center gap-6 lg:flex-row lg:items-start">
+        <div className="grid w-full max-w-6xl grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start">
           <Card
-            className={cn(glassCard, 'flex w-full flex-1 flex-col lg:max-w-xl')}
+            className={cn(glassCard, 'flex min-w-0 w-full flex-col lg:col-span-4')}
             variant="transparent"
           >
             <Card.Header className="pb-1">
@@ -154,7 +154,7 @@ export function SystemHealthDashboard({ data }: Props) {
           </Card>
 
           <Card
-            className={cn(glassCard, 'flex w-full flex-col lg:w-auto lg:shrink-0')}
+            className={cn(glassCard, 'flex min-w-0 w-full flex-col lg:col-span-8')}
             variant="transparent"
           >
             <Card.Header className="pb-1">
