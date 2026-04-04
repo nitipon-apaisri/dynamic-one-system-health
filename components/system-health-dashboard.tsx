@@ -44,22 +44,22 @@ export function SystemHealthDashboard({ data }: Props) {
   return (
     <div
       className={cn(
-        'relative min-h-0 flex-1 overflow-hidden rounded-2xl',
-        'bg-slate-100 text-foreground dark:bg-slate-950'
+        'relative min-h-0 flex-1 overflow-hidden rounded-2xl'
+        // 'bg-slate-100 text-foreground dark:bg-slate-950'
       )}
     >
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_85%_55%_at_15%_-5%,rgba(99,102,241,0.28),transparent_55%)] dark:bg-[radial-gradient(ellipse_85%_55%_at_15%_-5%,rgba(99,102,241,0.38),transparent_55%)]"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_95%_10%,rgba(100,116,139,0.35),transparent_50%)] dark:bg-[radial-gradient(ellipse_70%_50%_at_95%_10%,rgba(148,163,184,0.22),transparent_50%)]"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_45%_at_50%_100%,rgba(79,70,229,0.12),transparent_45%)] dark:bg-[radial-gradient(ellipse_60%_45%_at_50%_100%,rgba(129,140,248,0.15),transparent_45%)]"
-      />
+      {/*<div*/}
+      {/*  aria-hidden*/}
+      {/*  className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_85%_55%_at_15%_-5%,rgba(99,102,241,0.28),transparent_55%)] dark:bg-[radial-gradient(ellipse_85%_55%_at_15%_-5%,rgba(99,102,241,0.38),transparent_55%)]"*/}
+      {/*/>*/}
+      {/*<div*/}
+      {/*  aria-hidden*/}
+      {/*  className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_95%_10%,rgba(100,116,139,0.35),transparent_50%)] dark:bg-[radial-gradient(ellipse_70%_50%_at_95%_10%,rgba(148,163,184,0.22),transparent_50%)]"*/}
+      {/*/>*/}
+      {/*<div*/}
+      {/*  aria-hidden*/}
+      {/*  className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_45%_at_50%_100%,rgba(79,70,229,0.12),transparent_45%)] dark:bg-[radial-gradient(ellipse_60%_45%_at_50%_100%,rgba(129,140,248,0.15),transparent_45%)]"*/}
+      {/*/>*/}
 
       <div className="relative flex min-h-[min(520px,calc(100dvh-5rem))] items-center justify-center p-6">
         <Card className={cn(glassCard, 'flex w-full max-w-xl flex-col')} variant="transparent">
