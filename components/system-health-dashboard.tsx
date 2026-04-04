@@ -14,14 +14,6 @@ type Props = {
   data: SystemHealthSnapshot[];
 };
 
-function chipColorForStatus(status: string): 'success' | 'warning' | 'danger' | 'default' {
-  const v = status.trim().toLowerCase();
-  if (v === 'ok' || v === 'healthy' || v === 'up') return 'success';
-  if (v === 'warn' || v === 'warning' || v === 'degraded') return 'warning';
-  if (v === 'error' || v === 'down' || v === 'critical' || v === 'failed') return 'danger';
-  return 'default';
-}
-
 export function SystemHealthDashboard({ data }: Props) {
   const sorted = sortSnapshotsByTimestamp(data);
   const memorySummary = summarizeMemoryUsage(data);
@@ -72,7 +64,7 @@ export function SystemHealthDashboard({ data }: Props) {
       <div className="relative flex min-h-[min(520px,calc(100dvh-5rem))] items-center justify-center p-6">
         <Card className={cn(glassCard, 'flex w-full max-w-xl flex-col')} variant="transparent">
           <Card.Header className="pb-1">
-            <Card.Title className="text-sm font-semibold text-foreground">Memory</Card.Title>
+            <Card.Title className="text-sm font-semibold text-foreground">Server Status</Card.Title>
           </Card.Header>
           <Card.Content className="flex flex-col gap-3 pt-0">
             {latest ? (
@@ -81,9 +73,6 @@ export function SystemHealthDashboard({ data }: Props) {
                   <p className="text-xs font-semibold tracking-wide text-foreground/80 uppercase">
                     Status summary
                   </p>
-                  <Chip color={chipColorForStatus(latest.status)} size="sm" variant="primary">
-                    <Chip.Label className="font-semibold uppercase">{latest.status}</Chip.Label>
-                  </Chip>
                 </div>
                 <p className="text-xs leading-snug text-foreground/75">
                   {statusBreakdown || 'No status readings'}

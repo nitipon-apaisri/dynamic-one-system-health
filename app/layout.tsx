@@ -1,12 +1,12 @@
-import {Providers} from "./providers";
-import "./globals.css";
+import { Providers } from './providers';
+import './globals.css';
 
-export default function RootLayout({children}: { children: React.ReactNode }) {
-    return (
-        <html lang="en" suppressHydrationWarning>
-        <body className="bg-background text-foreground">
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <body className="bg-background text-foreground">
         <Providers>{children}</Providers>
-        </body>
-        </html>
-    );
+      </body>
+    </html>
+  );
 }

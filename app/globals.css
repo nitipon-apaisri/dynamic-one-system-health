@@ -1,6 +1,44 @@
-@import "tailwindcss";
-@import "@heroui/styles";
+@import 'tailwindcss';
+@import '@heroui/styles';
 
 body {
   min-height: 100dvh;
+  /* Futuristic backdrop: accent wash + fine grid + diagonal scan lines (theme-aware) */
+  background-image:
+    radial-gradient(
+      ellipse 110% 65% at 50% -18%,
+      color-mix(in oklch, var(--accent) 28%, transparent) 0%,
+      transparent 58%
+    ),
+    radial-gradient(
+      ellipse 55% 40% at 100% 0%,
+      color-mix(in oklch, var(--accent) 12%, transparent) 0%,
+      transparent 50%
+    ),
+    linear-gradient(color-mix(in oklch, var(--foreground) 5%, transparent) 1px, transparent 1px),
+    linear-gradient(
+      90deg,
+      color-mix(in oklch, var(--foreground) 5%, transparent) 1px,
+      transparent 1px
+    ),
+    repeating-linear-gradient(
+      125deg,
+      transparent,
+      transparent 72px,
+      color-mix(in oklch, var(--accent) 9%, transparent) 72px,
+      color-mix(in oklch, var(--accent) 9%, transparent) 73px
+    );
+  background-size:
+    100% 100%,
+    100% 100%,
+    40px 40px,
+    40px 40px,
+    auto;
+  background-position:
+    center top,
+    top right,
+    center,
+    center,
+    center;
+  background-repeat: no-repeat, no-repeat, repeat, repeat, repeat;
 }

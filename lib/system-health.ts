@@ -10,48 +10,48 @@ export type SystemHealthSnapshot = {
 export const MEMORY_PROGRESS_MAX_MB = 512;
 
 export const SAMPLE_SYSTEM_HEALTH: SystemHealthSnapshot = {
-  _id: "69cf834334b1f533a178b929",
-  status: "ok",
-  memory_usage: "158.20 MB",
-  uptime: "0h 7m 22s",
-  timestamp: "2026-04-03T16:07:15.097+07:00",
+  _id: '69cf834334b1f533a178b929',
+  status: 'ok',
+  memory_usage: '158.20 MB',
+  uptime: '0h 7m 22s',
+  timestamp: '2026-04-03T16:07:15.097+07:00',
 };
 
 export const SAMPLE_SYSTEM_HEALTH_SERIES: SystemHealthSnapshot[] = [
   {
-    _id: "69cf834334b1f533a178b929",
-    status: "ok",
-    memory_usage: "98.10 MB",
-    uptime: "0h 2m 05s",
-    timestamp: "2026-04-03T15:55:00.000+07:00",
+    _id: '69cf834334b1f533a178b929',
+    status: 'ok',
+    memory_usage: '98.10 MB',
+    uptime: '0h 2m 05s',
+    timestamp: '2026-04-03T15:55:00.000+07:00',
   },
   {
-    _id: "69cf834334b1f533a178b929",
-    status: "ok",
-    memory_usage: "124.40 MB",
-    uptime: "0h 4m 18s",
-    timestamp: "2026-04-03T16:01:22.000+07:00",
+    _id: '69cf834334b1f533a178b929',
+    status: 'ok',
+    memory_usage: '124.40 MB',
+    uptime: '0h 4m 18s',
+    timestamp: '2026-04-03T16:01:22.000+07:00',
   },
   {
-    _id: "69cf834334b1f533a178b929",
-    status: "warn",
-    memory_usage: "288.00 MB",
-    uptime: "0h 5m 40s",
-    timestamp: "2026-04-03T16:04:10.000+07:00",
+    _id: '69cf834334b1f533a178b929',
+    status: 'warn',
+    memory_usage: '288.00 MB',
+    uptime: '0h 5m 40s',
+    timestamp: '2026-04-03T16:04:10.000+07:00',
   },
   {
-    _id: "69cf834334b1f533a178b929",
-    status: "ok",
-    memory_usage: "158.20 MB",
-    uptime: "0h 7m 22s",
-    timestamp: "2026-04-03T16:07:15.097+07:00",
+    _id: '69cf834334b1f533a178b929',
+    status: 'ok',
+    memory_usage: '158.20 MB',
+    uptime: '0h 7m 22s',
+    timestamp: '2026-04-03T16:07:15.097+07:00',
   },
   {
-    _id: "69cf834334b1f533a178b929",
-    status: "error",
-    memory_usage: "401.50 MB",
-    uptime: "0h 9m 01s",
-    timestamp: "2026-04-03T16:09:45.000+07:00",
+    _id: '69cf834334b1f533a178b929',
+    status: 'error',
+    memory_usage: '401.50 MB',
+    uptime: '0h 9m 01s',
+    timestamp: '2026-04-03T16:09:45.000+07:00',
   },
 ];
 
@@ -129,7 +129,9 @@ export function summarizeMemoryUsage(snapshots: SystemHealthSnapshot[]): MemoryU
   };
 }
 
-export function sortSnapshotsByTimestamp(snapshots: SystemHealthSnapshot[]): SystemHealthSnapshot[] {
+export function sortSnapshotsByTimestamp(
+  snapshots: SystemHealthSnapshot[]
+): SystemHealthSnapshot[] {
   return [...snapshots].sort((a, b) => {
     const ta = new Date(a.timestamp).getTime();
     const tb = new Date(b.timestamp).getTime();
