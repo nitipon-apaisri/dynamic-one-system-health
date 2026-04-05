@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+
 import { MonthContributionHeatmap } from '@/components/month-contribution-heatmap';
 import { Card, Chip, cn } from '@heroui/react';
 import {
@@ -92,6 +94,11 @@ type Props = {
 };
 
 export function SystemHealthDashboard({ data }: Props) {
+  const [now, setNow] = useState<Date | null>(null);
+  useEffect(() => {
+    setNow(new Date());
+  }, []);
+
   const sorted = sortSnapshotsByTimestamp(data);
   const memorySummary = summarizeMemoryUsage(data);
   const latest = sorted.length === 0 ? null : sorted[sorted.length - 1];
@@ -120,11 +127,6 @@ export function SystemHealthDashboard({ data }: Props) {
   const statusBreakdownRows = [...statusCounts.entries()].sort(
     (a, b) => b[1] - a[1] || a[0].localeCompare(b[0])
   );
-
-  const latestReadingLabel =
-    heatmapAnchor !== null && !Number.isNaN(heatmapAnchor.getTime())
-      ? heatmapAnchor.toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })
-      : null;
 
   return (
     <div className={cn('relative min-h-0 flex-1 overflow-hidden rounded-2xl')}>
@@ -158,12 +160,17 @@ export function SystemHealthDashboard({ data }: Props) {
                 >
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-x-6">
                     <div className="min-w-0">
-                      <p className="text-xs text-muted">Last reading</p>
+                      <p className="text-xs text-muted">Current date</p>
                       <time
                         className="mt-0.5 block text-xs font-medium tabular-nums text-foreground"
-                        dateTime={latest.timestamp}
+                        {...(now !== null ? { dateTime: now.toISOString() } : {})}
                       >
-                        {latestReadingLabel ?? '—'}
+                        {now !== null
+                          ? now.toLocaleString(undefined, {
+                              dateStyle: 'short',
+                              timeStyle: 'short',
+                            })
+                          : '—'}
                       </time>
                     </div>
                     <div className="min-w-0">
@@ -247,7 +254,6 @@ export function SystemHealthDashboard({ data }: Props) {
           >
             <Card.Header className="pb-1">
               <Card.Title className="text-sm font-semibold text-foreground">
-                Month activity -{' '}
                 {heatmapAnchor?.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
               </Card.Title>
             </Card.Header>
