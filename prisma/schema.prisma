@@ -1,0 +1,16 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  // url property removed from here
+}
+
+model health_logs {
+  id           String @id @default(auto()) @map("_id") @db.ObjectId
+  memory_usage String
+  status       String
+  timestamp    String
+  uptime       String
+}
