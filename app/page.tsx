@@ -1,8 +1,12 @@
 import { SystemHealthDashboard } from '@/components/system-health-dashboard';
 import { ThemeSwitch } from '@/components/theme-switch';
-import { SAMPLE_SYSTEM_HEALTH_SERIES } from '@/lib/system-health';
+import { getSystemHealthSeriesForHome } from '@/lib/system-health-db';
 
-export default function Home() {
+export const dynamic = 'force-dynamic';
+
+export default async function Home() {
+  const data = await getSystemHealthSeriesForHome();
+
   return (
     <div className="flex min-h-dvh flex-col text-foreground">
       <header className="flex items-center justify-between px-6 py-4">
@@ -13,7 +17,7 @@ export default function Home() {
       </header>
 
       <main className="flex flex-1 flex-col px-6 pb-6">
-        <SystemHealthDashboard data={SAMPLE_SYSTEM_HEALTH_SERIES} />
+        <SystemHealthDashboard data={data} />
       </main>
     </div>
   );
