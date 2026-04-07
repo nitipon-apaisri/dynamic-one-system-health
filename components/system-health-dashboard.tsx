@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { ServerOff } from 'lucide-react';
+import { useState } from 'react';
 
 import { MonthContributionHeatmap } from '@/components/month-contribution-heatmap';
 import { Card, Chip, cn } from '@heroui/react';
@@ -94,29 +95,23 @@ type Props = {
 };
 
 export function SystemHealthDashboard({ data }: Props) {
-  const [now, setNow] = useState<Date | null>(null);
-  useEffect(() => {
-    setNow(new Date());
-  }, []);
+  const [now] = useState(() => new Date());
+  const [emptyCalendarAnchor] = useState(() => new Date());
 
   const sorted = sortSnapshotsByTimestamp(data);
   const memorySummary = summarizeMemoryUsage(data);
   const latest = sorted.length === 0 ? null : sorted[sorted.length - 1];
 
-  const heatmapAnchor = latest !== null ? new Date(latest.timestamp) : null;
-  const heatmapYear =
-    heatmapAnchor !== null && !Number.isNaN(heatmapAnchor.getTime())
-      ? heatmapAnchor.getFullYear()
-      : undefined;
-  const heatmapMonth =
-    heatmapAnchor !== null && !Number.isNaN(heatmapAnchor.getTime())
-      ? heatmapAnchor.getMonth()
-      : undefined;
-
-  const monthActivityGetLevel =
-    heatmapYear === undefined || heatmapMonth === undefined
-      ? undefined
-      : getMonthActivityLevelGetter(sorted, heatmapYear, heatmapMonth);
+  const calendarDate =
+    latest !== null
+      ? (() => {
+          const d = new Date(latest.timestamp);
+          return !Number.isNaN(d.getTime()) ? d : emptyCalendarAnchor;
+        })()
+      : now;
+  const calendarYear = calendarDate.getFullYear();
+  const calendarMonth = calendarDate.getMonth();
+  const monthActivityGetLevel = getMonthActivityLevelGetter(sorted, calendarYear, calendarMonth);
   const statusBadge: { label: string; color: StatusChipColor } | null =
     latest !== null ? getStatusBadgeDisplay(latest.status) : null;
   const statusCounts = new Map<string, number>();
@@ -163,14 +158,12 @@ export function SystemHealthDashboard({ data }: Props) {
                       <p className="text-xs text-muted">Current date</p>
                       <time
                         className="mt-0.5 block text-xs font-medium tabular-nums text-foreground"
-                        {...(now !== null ? { dateTime: now.toISOString() } : {})}
+                        dateTime={now.toISOString()}
                       >
-                        {now !== null
-                          ? now.toLocaleString(undefined, {
-                              dateStyle: 'short',
-                              timeStyle: 'short',
-                            })
-                          : '—'}
+                        {now.toLocaleString(undefined, {
+                          dateStyle: 'short',
+                          timeStyle: 'short',
+                        })}
                       </time>
                     </div>
                     <div className="min-w-0">
@@ -211,40 +204,57 @@ export function SystemHealthDashboard({ data }: Props) {
                     )}
                   </div>
                 </div>
+              ) : latest === null ? (
+                <div
+                  className="flex flex-col items-center justify-center gap-2 rounded-lg bg-gray-100 px-4 py-8 text-center dark:bg-white/10"
+                  role="status"
+                  aria-label="No server health data"
+                >
+                  <ServerOff
+                    className="size-10 text-foreground/45"
+                    strokeWidth={1.25}
+                    aria-hidden
+                  />
+                  <p className="max-w-[20rem] text-xs leading-relaxed text-muted">
+                    No health snapshots yet. Status and memory will show here once the server
+                    reports data.
+                  </p>
+                </div>
               ) : null}
-              {memorySummary.totalCount === 0 ? (
-                <p className="text-xs text-muted">—</p>
-              ) : (
-                <>
-                  <dl className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs tabular-nums">
-                    <dt className="text-foreground/70">Latest</dt>
-                    <dd className="text-right font-medium text-foreground">
-                      {memorySummary.latestMb !== null
-                        ? formatMegabytes(memorySummary.latestMb)
-                        : (memorySummary.latestRaw ?? '—')}
-                    </dd>
-                    {memorySummary.parsedCount > 0 &&
-                    memorySummary.minMb !== null &&
-                    memorySummary.maxMb !== null &&
-                    memorySummary.avgMb !== null ? (
-                      <>
-                        <dt className="text-foreground/70">Min</dt>
-                        <dd className="text-right font-medium text-foreground">
-                          {formatMegabytes(memorySummary.minMb)}
-                        </dd>
-                        <dt className="text-foreground/70">Max</dt>
-                        <dd className="text-right font-medium text-foreground">
-                          {formatMegabytes(memorySummary.maxMb)}
-                        </dd>
-                        <dt className="text-foreground/70">Avg</dt>
-                        <dd className="text-right font-medium text-foreground">
-                          {formatMegabytes(memorySummary.avgMb)}
-                        </dd>
-                      </>
-                    ) : null}
-                  </dl>
-                </>
-              )}
+              {latest !== null &&
+                (memorySummary.totalCount === 0 ? (
+                  <p className="text-xs text-muted">—</p>
+                ) : (
+                  <>
+                    <dl className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs tabular-nums">
+                      <dt className="text-foreground/70">Latest</dt>
+                      <dd className="text-right font-medium text-foreground">
+                        {memorySummary.latestMb !== null
+                          ? formatMegabytes(memorySummary.latestMb)
+                          : (memorySummary.latestRaw ?? '—')}
+                      </dd>
+                      {memorySummary.parsedCount > 0 &&
+                      memorySummary.minMb !== null &&
+                      memorySummary.maxMb !== null &&
+                      memorySummary.avgMb !== null ? (
+                        <>
+                          <dt className="text-foreground/70">Min</dt>
+                          <dd className="text-right font-medium text-foreground">
+                            {formatMegabytes(memorySummary.minMb)}
+                          </dd>
+                          <dt className="text-foreground/70">Max</dt>
+                          <dd className="text-right font-medium text-foreground">
+                            {formatMegabytes(memorySummary.maxMb)}
+                          </dd>
+                          <dt className="text-foreground/70">Avg</dt>
+                          <dd className="text-right font-medium text-foreground">
+                            {formatMegabytes(memorySummary.avgMb)}
+                          </dd>
+                        </>
+                      ) : null}
+                    </dl>
+                  </>
+                ))}
             </Card.Content>
           </Card>
 
@@ -254,20 +264,14 @@ export function SystemHealthDashboard({ data }: Props) {
           >
             <Card.Header className="pb-1">
               <Card.Title className="text-sm font-semibold text-foreground">
-                {heatmapAnchor?.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                {calendarDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
               </Card.Title>
             </Card.Header>
             <Card.Content className="pt-0">
               <MonthContributionHeatmap
-                {...(heatmapYear !== undefined &&
-                heatmapMonth !== undefined &&
-                monthActivityGetLevel !== undefined
-                  ? {
-                      year: heatmapYear,
-                      month: heatmapMonth,
-                      getLevel: monthActivityGetLevel,
-                    }
-                  : {})}
+                year={calendarYear}
+                month={calendarMonth}
+                getLevel={monthActivityGetLevel}
               />
             </Card.Content>
           </Card>
