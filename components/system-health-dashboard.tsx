@@ -150,16 +150,6 @@ export function SystemHealthDashboard({ data }: Props) {
     (a, b) => b[1] - a[1] || a[0].localeCompare(b[0])
   );
 
-  const monthTitleBase = calendarDate.toLocaleDateString('en-US', {
-    month: 'long',
-    year: 'numeric',
-  });
-  const monthTitleClock = clock.toLocaleString(undefined, {
-    dateStyle: 'short',
-    timeStyle: 'short',
-  });
-  const monthCardTitle = `${monthTitleBase} — ${monthTitleClock}`;
-
   let nextRefreshBody: string;
   if (nextRefreshAtMs === null) {
     nextRefreshBody = '—';
@@ -174,6 +164,10 @@ export function SystemHealthDashboard({ data }: Props) {
     }
   }
 
+  const latestSnapshotAt = latest !== null ? new Date(latest.timestamp) : null;
+  const latestSnapshotValid =
+    latestSnapshotAt !== null && !Number.isNaN(latestSnapshotAt.getTime());
+
   return (
     <div className={cn('relative min-h-0 flex-1 overflow-hidden rounded-2xl')}>
       <div className="relative flex min-h-[min(520px,calc(100dvh-5rem))] items-center justify-center p-6">
@@ -183,9 +177,27 @@ export function SystemHealthDashboard({ data }: Props) {
             variant="transparent"
           >
             <Card.Header className="flex w-full min-w-0 flex-row items-center justify-between gap-2 pb-1">
-              <Card.Title className="text-sm font-semibold text-foreground">
-                Server Status
-              </Card.Title>
+              <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+                <Card.Title className="text-sm font-semibold text-foreground">
+                  Server Status
+                </Card.Title>
+                {latest !== null && statusBadge !== null ? (
+                  <div className="min-w-0" aria-label="Next refresh">
+                    {nextRefreshAtMs !== null ? (
+                      <time
+                        className="block text-xs font-medium tabular-nums text-foreground"
+                        dateTime={new Date(nextRefreshAtMs).toISOString()}
+                      >
+                        {nextRefreshBody}
+                      </time>
+                    ) : (
+                      <p className="text-xs font-medium tabular-nums text-foreground">
+                        {nextRefreshBody}
+                      </p>
+                    )}
+                  </div>
+                ) : null}
+              </div>
               {statusBadge !== null ? (
                 <Chip color={statusBadge.color} size="sm" variant="soft">
                   {statusBadge.label}
@@ -206,18 +218,19 @@ export function SystemHealthDashboard({ data }: Props) {
                 >
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-x-6">
                     <div className="min-w-0">
-                      <p className="text-xs text-muted">Next refresh</p>
-                      {nextRefreshAtMs !== null ? (
+                      <p className="text-xs text-muted">Last reading</p>
+                      {latestSnapshotValid && latestSnapshotAt !== null ? (
                         <time
                           className="mt-0.5 block text-xs font-medium tabular-nums text-foreground"
-                          dateTime={new Date(nextRefreshAtMs).toISOString()}
+                          dateTime={latestSnapshotAt.toISOString()}
                         >
-                          {nextRefreshBody}
+                          {latestSnapshotAt.toLocaleString(undefined, {
+                            dateStyle: 'short',
+                            timeStyle: 'short',
+                          })}
                         </time>
                       ) : (
-                        <p className="mt-0.5 text-xs font-medium tabular-nums text-foreground">
-                          {nextRefreshBody}
-                        </p>
+                        <p className="mt-0.5 text-xs font-medium tabular-nums text-foreground">—</p>
                       )}
                     </div>
                     <div className="min-w-0">
@@ -318,7 +331,7 @@ export function SystemHealthDashboard({ data }: Props) {
           >
             <Card.Header className="pb-1">
               <Card.Title className="text-sm font-semibold text-foreground">
-                {monthCardTitle}
+                {calendarDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
               </Card.Title>
             </Card.Header>
             <Card.Content className="pt-0">
