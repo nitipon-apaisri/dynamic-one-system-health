@@ -107,6 +107,7 @@ export function SystemHealthDashboard({ data }: Props) {
   const router = useRouter();
   const [emptyCalendarAnchor] = useState(() => new Date());
   const [clock, setClock] = useState(() => new Date());
+  const [refreshFiredForSnapshotTs, setRefreshFiredForSnapshotTs] = useState<string | null>(null);
   const refreshFiredForSnapshotTsRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -126,6 +127,9 @@ export function SystemHealthDashboard({ data }: Props) {
     if (!overdue) return;
     if (refreshFiredForSnapshotTsRef.current === latest.timestamp) return;
     refreshFiredForSnapshotTsRef.current = latest.timestamp;
+    queueMicrotask(() => {
+      setRefreshFiredForSnapshotTs(latest.timestamp);
+    });
     router.refresh();
   }, [latest, nextRefreshAtMs, router, clock]);
 
@@ -156,8 +160,7 @@ export function SystemHealthDashboard({ data }: Props) {
   } else {
     const remaining = nextRefreshAtMs - clock.getTime();
     if (remaining <= 0) {
-      const refreshing =
-        latest !== null && refreshFiredForSnapshotTsRef.current === latest.timestamp;
+      const refreshing = latest !== null && refreshFiredForSnapshotTs === latest.timestamp;
       nextRefreshBody = refreshing ? 'Refreshing…' : '0:00';
     } else {
       nextRefreshBody = formatCountdownMmSs(remaining);
