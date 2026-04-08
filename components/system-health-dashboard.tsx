@@ -1,13 +1,15 @@
 'use client';
 
 import { ServerOff } from 'lucide-react';
-import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 
 import { MonthContributionHeatmap } from '@/components/month-contribution-heatmap';
 import { Card, Chip, cn } from '@heroui/react';
 import {
   formatMegabytes,
   getMonthActivityLevelGetter,
+  getNextRefreshAfterMs,
   summarizeMemoryUsage,
   sortSnapshotsByTimestamp,
   type SystemHealthSnapshot,
@@ -94,13 +96,38 @@ type Props = {
   data: SystemHealthSnapshot[];
 };
 
+function formatCountdownMmSs(remainingMs: number): string {
+  const totalSec = Math.max(0, Math.ceil(remainingMs / 1000));
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
 export function SystemHealthDashboard({ data }: Props) {
-  const [now] = useState(() => new Date());
+  const router = useRouter();
   const [emptyCalendarAnchor] = useState(() => new Date());
+  const [clock, setClock] = useState(() => new Date());
+  const refreshFiredForSnapshotTsRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const id = window.setInterval(() => setClock(new Date()), 1000);
+    return () => window.clearInterval(id);
+  }, []);
 
   const sorted = sortSnapshotsByTimestamp(data);
   const memorySummary = summarizeMemoryUsage(data);
   const latest = sorted.length === 0 ? null : sorted[sorted.length - 1];
+
+  const nextRefreshAtMs = latest !== null ? getNextRefreshAfterMs(latest.timestamp) : null;
+
+  useEffect(() => {
+    if (latest === null || nextRefreshAtMs === null) return;
+    const overdue = clock.getTime() >= nextRefreshAtMs;
+    if (!overdue) return;
+    if (refreshFiredForSnapshotTsRef.current === latest.timestamp) return;
+    refreshFiredForSnapshotTsRef.current = latest.timestamp;
+    router.refresh();
+  }, [latest, nextRefreshAtMs, router, clock]);
 
   const calendarDate =
     latest !== null
@@ -108,7 +135,7 @@ export function SystemHealthDashboard({ data }: Props) {
           const d = new Date(latest.timestamp);
           return !Number.isNaN(d.getTime()) ? d : emptyCalendarAnchor;
         })()
-      : now;
+      : clock;
   const calendarYear = calendarDate.getFullYear();
   const calendarMonth = calendarDate.getMonth();
   const monthActivityGetLevel = getMonthActivityLevelGetter(sorted, calendarYear, calendarMonth);
@@ -123,6 +150,24 @@ export function SystemHealthDashboard({ data }: Props) {
     (a, b) => b[1] - a[1] || a[0].localeCompare(b[0])
   );
 
+  let nextRefreshBody: string;
+  if (nextRefreshAtMs === null) {
+    nextRefreshBody = '—';
+  } else {
+    const remaining = nextRefreshAtMs - clock.getTime();
+    if (remaining <= 0) {
+      const refreshing =
+        latest !== null && refreshFiredForSnapshotTsRef.current === latest.timestamp;
+      nextRefreshBody = refreshing ? 'Refreshing…' : '0:00';
+    } else {
+      nextRefreshBody = formatCountdownMmSs(remaining);
+    }
+  }
+
+  const latestSnapshotAt = latest !== null ? new Date(latest.timestamp) : null;
+  const latestSnapshotValid =
+    latestSnapshotAt !== null && !Number.isNaN(latestSnapshotAt.getTime());
+
   return (
     <div className={cn('relative min-h-0 flex-1 overflow-hidden rounded-2xl')}>
       <div className="relative flex min-h-[min(520px,calc(100dvh-5rem))] items-center justify-center p-6">
@@ -132,18 +177,37 @@ export function SystemHealthDashboard({ data }: Props) {
             variant="transparent"
           >
             <Card.Header className="flex w-full min-w-0 flex-row items-center justify-between gap-2 pb-1">
-              <Card.Title className="text-sm font-semibold text-foreground">
+              <Card.Title className="min-w-0 text-sm font-semibold text-foreground">
                 Server Status
               </Card.Title>
-              {statusBadge !== null ? (
-                <Chip color={statusBadge.color} size="sm" variant="soft">
-                  {statusBadge.label}
-                </Chip>
-              ) : (
-                <Chip color="default" size="sm" variant="soft">
-                  No data
-                </Chip>
-              )}
+              <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+                {statusBadge !== null ? (
+                  <Chip color={statusBadge.color} size="sm" variant="soft">
+                    {statusBadge.label}
+                  </Chip>
+                ) : (
+                  <Chip color="default" size="sm" variant="soft">
+                    No data
+                  </Chip>
+                )}
+                {latest !== null && statusBadge !== null ? (
+                  <Chip
+                    aria-label={`Next refresh, ${nextRefreshBody}`}
+                    className="tabular-nums"
+                    color="accent"
+                    size="sm"
+                    variant="soft"
+                  >
+                    {nextRefreshAtMs !== null ? (
+                      <time dateTime={new Date(nextRefreshAtMs).toISOString()}>
+                        {nextRefreshBody}
+                      </time>
+                    ) : (
+                      nextRefreshBody
+                    )}
+                  </Chip>
+                ) : null}
+              </div>
             </Card.Header>
             <Card.Content className="flex flex-col gap-4 pt-0">
               {latest !== null && statusBadge !== null ? (
@@ -155,16 +219,20 @@ export function SystemHealthDashboard({ data }: Props) {
                 >
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-x-6">
                     <div className="min-w-0">
-                      <p className="text-xs text-muted">Current date</p>
-                      <time
-                        className="mt-0.5 block text-xs font-medium tabular-nums text-foreground"
-                        dateTime={now.toISOString()}
-                      >
-                        {now.toLocaleString(undefined, {
-                          dateStyle: 'short',
-                          timeStyle: 'short',
-                        })}
-                      </time>
+                      <p className="text-xs text-muted">Last reading</p>
+                      {latestSnapshotValid && latestSnapshotAt !== null ? (
+                        <time
+                          className="mt-0.5 block text-xs font-medium tabular-nums text-foreground"
+                          dateTime={latestSnapshotAt.toISOString()}
+                        >
+                          {latestSnapshotAt.toLocaleString(undefined, {
+                            dateStyle: 'short',
+                            timeStyle: 'short',
+                          })}
+                        </time>
+                      ) : (
+                        <p className="mt-0.5 text-xs font-medium tabular-nums text-foreground">—</p>
+                      )}
                     </div>
                     <div className="min-w-0">
                       <p className="text-xs text-muted">Uptime</p>

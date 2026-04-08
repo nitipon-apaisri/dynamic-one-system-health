@@ -9,6 +9,16 @@ export type SystemHealthSnapshot = {
 /** Demo ceiling for the memory progress bar (MB). */
 export const MEMORY_PROGRESS_MAX_MB = 512;
 
+/** Expected interval between health log samples; UI derives next refresh from latest timestamp. */
+export const HEALTH_LOG_REFRESH_INTERVAL_MS = 5 * 60 * 1000 + 30 * 1000;
+
+/** Epoch ms when the UI should expect the next log after `isoTimestamp`, or null if invalid. */
+export function getNextRefreshAfterMs(isoTimestamp: string): number | null {
+  const t = new Date(isoTimestamp).getTime();
+  if (Number.isNaN(t)) return null;
+  return t + HEALTH_LOG_REFRESH_INTERVAL_MS;
+}
+
 export const SAMPLE_SYSTEM_HEALTH: SystemHealthSnapshot = {
   _id: '69cf834334b1f533a178b929',
   status: 'ok',
