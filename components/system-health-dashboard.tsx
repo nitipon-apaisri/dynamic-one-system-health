@@ -177,36 +177,37 @@ export function SystemHealthDashboard({ data }: Props) {
             variant="transparent"
           >
             <Card.Header className="flex w-full min-w-0 flex-row items-center justify-between gap-2 pb-1">
-              <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
-                <Card.Title className="text-sm font-semibold text-foreground">
-                  Server Status
-                </Card.Title>
+              <Card.Title className="min-w-0 text-sm font-semibold text-foreground">
+                Server Status
+              </Card.Title>
+              <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+                {statusBadge !== null ? (
+                  <Chip color={statusBadge.color} size="sm" variant="soft">
+                    {statusBadge.label}
+                  </Chip>
+                ) : (
+                  <Chip color="default" size="sm" variant="soft">
+                    No data
+                  </Chip>
+                )}
                 {latest !== null && statusBadge !== null ? (
-                  <div className="min-w-0" aria-label="Next refresh">
+                  <Chip
+                    aria-label={`Next refresh, ${nextRefreshBody}`}
+                    className="tabular-nums"
+                    color="accent"
+                    size="sm"
+                    variant="soft"
+                  >
                     {nextRefreshAtMs !== null ? (
-                      <time
-                        className="block text-xs font-medium tabular-nums text-foreground"
-                        dateTime={new Date(nextRefreshAtMs).toISOString()}
-                      >
+                      <time dateTime={new Date(nextRefreshAtMs).toISOString()}>
                         {nextRefreshBody}
                       </time>
                     ) : (
-                      <p className="text-xs font-medium tabular-nums text-foreground">
-                        {nextRefreshBody}
-                      </p>
+                      nextRefreshBody
                     )}
-                  </div>
+                  </Chip>
                 ) : null}
               </div>
-              {statusBadge !== null ? (
-                <Chip color={statusBadge.color} size="sm" variant="soft">
-                  {statusBadge.label}
-                </Chip>
-              ) : (
-                <Chip color="default" size="sm" variant="soft">
-                  No data
-                </Chip>
-              )}
             </Card.Header>
             <Card.Content className="flex flex-col gap-4 pt-0">
               {latest !== null && statusBadge !== null ? (
