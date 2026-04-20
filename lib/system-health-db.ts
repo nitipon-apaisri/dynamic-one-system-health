@@ -16,10 +16,10 @@ function filterByCurrentMonth<T extends { timestamp: string }>(rows: T[]): T[] {
 
 function mapRow(row: {
   id: string;
-  memory_usage: string;
+  memory_usage: string | null;
   status: string;
   timestamp: string;
-  uptime: string;
+  uptime: string | null;
 }): SystemHealthSnapshot {
   return {
     _id: row.id,

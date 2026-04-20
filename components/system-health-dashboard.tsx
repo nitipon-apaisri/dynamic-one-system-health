@@ -240,7 +240,9 @@ export function SystemHealthDashboard({ data }: Props) {
                     <div className="min-w-0">
                       <p className="text-xs text-muted">Uptime</p>
                       <p className="mt-0.5 text-xs font-medium tabular-nums text-foreground">
-                        {latest.uptime.trim().length > 0 ? latest.uptime.trim() : '—'}
+                        {latest.uptime != null && latest.uptime.trim().length > 0
+                          ? latest.uptime.trim()
+                          : '—'}
                       </p>
                     </div>
                   </div>

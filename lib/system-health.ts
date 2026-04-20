@@ -1,8 +1,8 @@
 export type SystemHealthSnapshot = {
   _id: string;
   status: string;
-  memory_usage: string;
-  uptime: string;
+  memory_usage: string | null;
+  uptime: string | null;
   timestamp: string;
 };
 
@@ -75,7 +75,8 @@ export type MemoryUsageSummary = {
   avgMb: number | null;
 };
 
-export function parseMemoryMegabytes(usage: string): number | null {
+export function parseMemoryMegabytes(usage: string | null): number | null {
+  if (usage == null || usage.trim() === '') return null;
   const match = /^([\d.]+)\s*MB\b/i.exec(usage.trim());
   if (!match) return null;
   const n = Number.parseFloat(match[1]);

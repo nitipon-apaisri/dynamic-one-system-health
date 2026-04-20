@@ -9,9 +9,9 @@ datasource db {
 }
 
 model health_logs {
-  id           String @id @default(auto()) @map("_id") @db.ObjectId
-  memory_usage String
+  id           String  @id @default(auto()) @map("_id") @db.ObjectId
+  memory_usage String?
   status       String
   timestamp    String
-  uptime       String
+  uptime       String?
 }
