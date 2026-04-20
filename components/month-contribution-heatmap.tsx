@@ -1,7 +1,9 @@
 'use client';
 
-import { cn } from '@heroui/react';
+import { cn, Tooltip } from '@heroui/react';
 import { useEffect, useMemo, useState } from 'react';
+
+import type { DayOkErrorCounts } from '@/lib/system-health';
 
 /** GitHub-style intensity: 0 = none, 4 = strongest */
 export type HeatmapLevel = 0 | 1 | 2 | 3 | 4;
@@ -12,7 +14,9 @@ export type MonthContributionHeatmapProps = {
   year?: number;
   /** 0–11. Must be passed together with `year` for a fixed month. */
   month?: number;
-  /** Maps each in-month day to a level. Defaults to `0` for all days. */
+  /** When set, cell color reflects OK vs error counts for that day; `getLevel` is ignored. */
+  getDayOkError?: (dayOfMonth: number, date: Date) => DayOkErrorCounts | null;
+  /** Maps each in-month day to a level. Defaults to `0` for all days. Used only if `getDayOkError` is omitted. */
   getLevel?: (dayOfMonth: number, date: Date) => HeatmapLevel;
 };
 
@@ -70,12 +74,24 @@ function cellBackground(level: HeatmapLevel): string {
   return `color-mix(in oklch, var(--accent) ${accentPct}, var(--background))`;
 }
 
+/** No error readings: blue. Both OK and error: purple. Errors only: red. */
+function cellBackgroundFromOkError({ ok, error }: DayOkErrorCounts): string {
+  if (error === 0) {
+    return 'color-mix(in oklch, oklch(0.52 0.14 252) 52%, var(--background))';
+  }
+  if (ok > 0) {
+    return 'color-mix(in oklch, oklch(0.5 0.19 294) 50%, color-mix(in oklch, oklch(0.52 0.14 252) 28%, var(--background)))';
+  }
+  return 'color-mix(in oklch, var(--danger) 52%, var(--background))';
+}
+
 const defaultGetLevel: NonNullable<MonthContributionHeatmapProps['getLevel']> = () => 0;
 
 export function MonthContributionHeatmap({
   className,
   year: yearProp,
   month: monthProp,
+  getDayOkError,
   getLevel = defaultGetLevel,
 }: MonthContributionHeatmapProps) {
   const isControlled = yearProp !== undefined && monthProp !== undefined;
@@ -118,7 +134,7 @@ export function MonthContributionHeatmap({
     <div className={cn(className)}>
       {/*<p className="mb-2 text-xs font-medium text-muted">{title}</p>*/}
       <table
-        aria-label={`Activity heatmap for ${title}. Columns are Sunday through Saturday; each row is one week of the month.`}
+        aria-label={`${getDayOkError ? 'Health' : 'Activity'} heatmap for ${title}. Columns are Sunday through Saturday; each row is one week of the month.`}
         className="w-full table-fixed border-separate border-spacing-1 lg:border-spacing-2"
       >
         <colgroup>
@@ -150,8 +166,48 @@ export function MonthContributionHeatmap({
                     </td>
                   );
                 }
-                const level = levelFn(cell.dayOfMonth, cell.date);
                 const iso = localIsoDate(cell.date);
+                if (getDayOkError) {
+                  const metrics = getDayOkError(cell.dayOfMonth, cell.date);
+                  const emptyBg = cellBackground(0);
+                  const bg = metrics === null ? emptyBg : cellBackgroundFromOkError(metrics);
+                  const ariaLabel =
+                    metrics === null
+                      ? `${iso}, no samples`
+                      : `${iso}, ${metrics.ok} OK, ${metrics.error} error${metrics.error === 1 ? '' : 's'}`;
+                  const cellSpan = (
+                    <span
+                      className="inline-block size-3 rounded-sm lg:size-4"
+                      style={{ backgroundColor: bg }}
+                    />
+                  );
+                  return (
+                    <td key={d} className="p-0 text-center">
+                      {metrics === null ? (
+                        <span className="inline-flex justify-center" aria-label={ariaLabel}>
+                          {cellSpan}
+                        </span>
+                      ) : (
+                        <Tooltip delay={0}>
+                          <Tooltip.Trigger
+                            aria-label={ariaLabel}
+                            className="inline-flex cursor-default justify-center rounded-sm outline-none"
+                          >
+                            {cellSpan}
+                          </Tooltip.Trigger>
+                          <Tooltip.Content placement="top" className="tabular-nums">
+                            <div className="flex flex-col gap-0.5 px-0.5 py-1 text-xs">
+                              <span className="font-medium text-foreground">{iso}</span>
+                              <span>OK: {metrics.ok}</span>
+                              <span>Error: {metrics.error}</span>
+                            </div>
+                          </Tooltip.Content>
+                        </Tooltip>
+                      )}
+                    </td>
+                  );
+                }
+                const level = levelFn(cell.dayOfMonth, cell.date);
                 const label = `${iso}, intensity ${level} of 4`;
                 return (
                   <td key={d} className="p-0 text-center" aria-label={label} title={label}>

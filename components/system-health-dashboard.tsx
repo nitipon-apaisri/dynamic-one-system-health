@@ -8,7 +8,7 @@ import { MonthContributionHeatmap } from '@/components/month-contribution-heatma
 import { Card, Chip, cn } from '@heroui/react';
 import {
   formatMegabytes,
-  getMonthActivityLevelGetter,
+  getMonthDayOkErrorGetter,
   getNextRefreshAfterMs,
   summarizeMemoryUsage,
   sortSnapshotsByTimestamp,
@@ -107,10 +107,13 @@ export function SystemHealthDashboard({ data }: Props) {
   const router = useRouter();
   const [emptyCalendarAnchor] = useState(() => new Date());
   const [clock, setClock] = useState(() => new Date());
+  /** Avoid SSR/client `new Date()` drift for the countdown chip (hydration mismatch). */
+  const [hasMounted, setHasMounted] = useState(false);
   const [refreshFiredForSnapshotTs, setRefreshFiredForSnapshotTs] = useState<string | null>(null);
   const refreshFiredForSnapshotTsRef = useRef<string | null>(null);
 
   useEffect(() => {
+    setHasMounted(true);
     const id = window.setInterval(() => setClock(new Date()), 1000);
     return () => window.clearInterval(id);
   }, []);
@@ -142,7 +145,7 @@ export function SystemHealthDashboard({ data }: Props) {
       : clock;
   const calendarYear = calendarDate.getFullYear();
   const calendarMonth = calendarDate.getMonth();
-  const monthActivityGetLevel = getMonthActivityLevelGetter(sorted, calendarYear, calendarMonth);
+  const monthDayOkError = getMonthDayOkErrorGetter(sorted, calendarYear, calendarMonth);
   const statusBadge: { label: string; color: StatusChipColor } | null =
     latest !== null ? getStatusBadgeDisplay(latest.status) : null;
   const statusCounts = new Map<string, number>();
@@ -157,6 +160,8 @@ export function SystemHealthDashboard({ data }: Props) {
   let nextRefreshBody: string;
   if (nextRefreshAtMs === null) {
     nextRefreshBody = '—';
+  } else if (!hasMounted) {
+    nextRefreshBody = '--:--';
   } else {
     const remaining = nextRefreshAtMs - clock.getTime();
     if (remaining <= 0) {
@@ -195,7 +200,9 @@ export function SystemHealthDashboard({ data }: Props) {
                 )}
                 {latest !== null && statusBadge !== null ? (
                   <Chip
-                    aria-label={`Next refresh, ${nextRefreshBody}`}
+                    aria-label={
+                      hasMounted ? `Next refresh, ${nextRefreshBody}` : 'Next refresh countdown'
+                    }
                     className="tabular-nums"
                     color="accent"
                     size="sm"
@@ -344,7 +351,7 @@ export function SystemHealthDashboard({ data }: Props) {
               <MonthContributionHeatmap
                 year={calendarYear}
                 month={calendarMonth}
-                getLevel={monthActivityGetLevel}
+                getDayOkError={monthDayOkError}
               />
             </Card.Content>
           </Card>
